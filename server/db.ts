@@ -2,20 +2,17 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 
-// If DATABASE_URL is given, use it; otherwise default to /server/data/putter.db
-const defaultDir = path.join(__dirname, "data");
-const defaultPath = path.join(defaultDir, "putter.db");
+const dataDir = path.join(__dirname, "data");
+const dbPath = path.join(dataDir, "putter.db");
 
-const dbPath = process.env.DATABASE_URL || defaultPath;
-const dir = path.dirname(dbPath);
-
-// Ensure the directory exists
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
 export const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
+
+console.log("✅ Using SQLite DB at:", dbPath);
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS sessions (

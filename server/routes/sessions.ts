@@ -46,7 +46,7 @@ router.post("/", (req, res) => {
     if (!parsed.success) return res.status(400).json(parsed.error);
 
     const { name, date } = parsed.data;
-
+    console.log("userId, name, date:", userId, name, date);
     const info = db
       .prepare<[string, string, string], unknown>(
         `INSERT INTO sessions (user_id, name, date)

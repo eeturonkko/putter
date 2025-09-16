@@ -1,21 +1,132 @@
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { Link } from "expo-router";
-import React from "react";
+import { Link, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   useColorScheme,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SignOutButton } from "./components/SignOutButton";
 
+type Session = {
+  id: number;
+  name: string;
+  date: string; // YYYY-MM-DD
+  created_at: string;
+};
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
+
 export default function Home() {
   const { user } = useUser();
+  const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const c = palette(isDark);
+
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const [newDate, setNewDate] = useState(today);
+
+  const userId = user?.id ?? "";
+
+  const fetchSessions = useCallback(async () => {
+    if (!userId) return;
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/sessions`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": userId, // simple mode
+        },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data: Session[] = await res.json();
+      setSessions(data);
+    } catch (e: any) {
+      setError(e?.message || "Failed to load sessions");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchSessions();
+  }, [fetchSessions]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchSessions();
+  }, [fetchSessions]);
+
+  const createSession = useCallback(async () => {
+    if (!newName.trim()) {
+      setError("Session name is required.");
+      return;
+    }
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/sessions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": userId,
+        },
+        body: JSON.stringify({ name: newName.trim(), date: newDate }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const created: Session = await res.json();
+      setSessions((prev) => [created, ...prev]);
+      // reset & close
+      setNewName("");
+      setNewDate(today);
+      setCreateOpen(false);
+      // jump straight in
+      router.push({
+        pathname: "/(tabs)/session/[id]",
+        params: { id: String(created.id) },
+      });
+    } catch (e: any) {
+      setError(e?.message || "Failed to create session");
+    }
+  }, [newName, newDate, userId, today, router]);
+
+  const openSession = (s: Session) => {
+    router.push({
+      pathname: "/(tabs)/session/[id]",
+      params: { id: String(s.id) },
+    });
+  };
+
+  const Empty = () => (
+    <View
+      style={[
+        styles.empty,
+        { borderColor: c.cardBorder, backgroundColor: c.cardBg },
+      ]}
+    >
+      <Text style={[styles.emptyTitle, { color: c.fg }]}>No sessions yet</Text>
+      <Text style={[styles.emptyText, { color: c.muted }]}>
+        Tap “New session” to start logging your putts.
+      </Text>
+    </View>
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg }]}>
@@ -31,10 +142,10 @@ export default function Home() {
         {/* Big title */}
         <Text style={[styles.title, { color: c.fg }]}>Welcome</Text>
         <Text style={[styles.subtitle, { color: c.muted }]}>
-          Putter is a helpful tool for improving your disc golf putting skills.
+          Putter helps you track distances and makes to sharpen your putting.
         </Text>
 
-        {/* Content card */}
+        {/* Card */}
         <View
           style={[
             styles.card,
@@ -46,11 +157,86 @@ export default function Home() {
               Hei, {user?.primaryEmailAddress?.emailAddress}
             </Text>
             <Text style={[styles.cardText, { color: c.muted }]}>
-              You are signed in. Continue exploring the app or sign out below.
+              Create a new session or open an existing one below.
             </Text>
+
+            {/* Actions */}
             <View style={styles.actionsRow}>
+              <Pressable
+                onPress={() => setCreateOpen(true)}
+                android_ripple={{ color: c.ripple }}
+                style={[styles.button, { backgroundColor: c.primary }]}
+              >
+                <Text style={[styles.buttonText, { color: c.onPrimary }]}>
+                  New session
+                </Text>
+              </Pressable>
               <SignOutButton />
             </View>
+
+            {/* Error */}
+            {error ? (
+              <Text style={{ color: "#ef4444", marginTop: 8 }}>{error}</Text>
+            ) : null}
+
+            {/* Sessions list */}
+            {loading ? (
+              <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator />
+              </View>
+            ) : (
+              <FlatList
+                data={sessions}
+                keyExtractor={(item) => String(item.id)}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    tintColor={c.muted}
+                    colors={[c.primary]}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+                ListEmptyComponent={<Empty />}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{
+                      height: 10,
+                    }}
+                  />
+                )}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() => openSession(item)}
+                    android_ripple={{ color: c.ripple }}
+                    style={[
+                      styles.sessionRow,
+                      {
+                        backgroundColor: c.cardBg,
+                        borderColor: c.border,
+                        shadowOpacity: isDark ? 0 : 0.05,
+                      },
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[styles.sessionName, { color: c.fg }]}
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+                      <Text style={[styles.sessionMeta, { color: c.muted }]}>
+                        {item.date} • #{item.id}
+                      </Text>
+                    </View>
+                    <Text style={[styles.sessionChevron, { color: c.muted }]}>
+                      ›
+                    </Text>
+                  </Pressable>
+                )}
+                contentContainerStyle={{ paddingTop: 10 }}
+              />
+            )}
           </SignedIn>
 
           <SignedOut>
@@ -92,6 +278,64 @@ export default function Home() {
           By continuing you agree to our Terms & Privacy.
         </Text>
       </View>
+
+      {/* Create Session Modal */}
+      <Modal visible={createOpen} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalCard,
+              { backgroundColor: c.cardBg, borderColor: c.cardBorder },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.fg }]}>New session</Text>
+            <TextInput
+              placeholder="Session name"
+              placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
+              style={[
+                styles.input,
+                { color: c.fg, borderColor: c.border, backgroundColor: c.bg },
+              ]}
+              value={newName}
+              onChangeText={setNewName}
+            />
+            <TextInput
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
+              style={[
+                styles.input,
+                { color: c.fg, borderColor: c.border, backgroundColor: c.bg },
+              ]}
+              value={newDate}
+              onChangeText={setNewDate}
+            />
+
+            <View style={styles.actionsRow}>
+              <Pressable
+                onPress={() => setCreateOpen(false)}
+                android_ripple={{ color: c.ripple }}
+                style={[
+                  styles.button,
+                  styles.ghostButton,
+                  { borderColor: c.border },
+                ]}
+              >
+                <Text style={[styles.ghostText, { color: c.fg }]}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={createSession}
+                android_ripple={{ color: c.ripple }}
+                style={[styles.button, { backgroundColor: c.primary }]}
+              >
+                <Text style={[styles.buttonText, { color: c.onPrimary }]}>
+                  Create
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -220,5 +464,66 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: "auto",
     marginBottom: 12,
+  },
+  // List
+  sessionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
+  },
+  sessionName: {
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  sessionMeta: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  sessionChevron: {
+    fontSize: 28,
+    marginLeft: 10,
+  },
+  // Empty
+  empty: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  emptyText: {
+    fontSize: 13,
+    textAlign: "center",
+  },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    padding: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+  },
+  input: {
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    fontSize: 16,
   },
 });
