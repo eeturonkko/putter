@@ -22,7 +22,7 @@ export default function Home() {
       <View style={styles.container}>
         {/* App header */}
         <View style={styles.headerRow}>
-          <Text style={[styles.appName, { color: c.fg }]}>YourApp</Text>
+          <Text style={[styles.appName, { color: c.fg }]}>Putter</Text>
           <View style={[styles.badge, { backgroundColor: c.badgeBg }]}>
             <Text style={[styles.badgeText, { color: c.badgeFg }]}>v1.0</Text>
           </View>
