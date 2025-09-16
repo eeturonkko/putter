@@ -4,9 +4,13 @@
   "description": "Putter Express + SQLite API",
   "type": "commonjs",
   "main": "dist/index.js",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "nodemon --watch . --ext ts,json --exec \"ts-node -P tsconfig.json index.ts\"",
     "build": "tsc -p tsconfig.json",
+    "postinstall": "npm run build",
     "start": "node dist/index.js",
     "test": "echo \"No tests\" && exit 0"
   },

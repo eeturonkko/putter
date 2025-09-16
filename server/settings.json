@@ -1,0 +1,7 @@
+{
+  "appService.zipIgnorePattern": [
+    "**/.git{,/**}",
+    "**/.vscode{,/**}",
+    "**/node_modules{,/**}"
+  ]
+}
