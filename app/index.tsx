@@ -3,17 +3,25 @@ import { Link, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
-  Modal,
+  FlatList, // 👈 add
+  InputAccessoryView,
+  Keyboard, // 👈 add
+  KeyboardAvoidingView,
+  Modal, // 👈 add
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
-  TextInput,
+  TextInput, // 👈 add (iOS only, safe to import)
+  TouchableWithoutFeedback, // 👈 add
   useColorScheme,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { SignOutButton } from "./components/SignOutButton";
 
 type Session = {
@@ -43,6 +51,8 @@ export default function Home() {
   const [newDate, setNewDate] = useState(today);
 
   const userId = user?.id ?? "";
+  const insets = useSafeAreaInsets();
+  const accessoryId = "newSessionDoneBar";
 
   const fetchSessions = useCallback(async () => {
     if (!userId) return;
@@ -280,61 +290,126 @@ export default function Home() {
       </View>
 
       {/* Create Session Modal */}
-      <Modal visible={createOpen} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalCard,
-              { backgroundColor: c.cardBg, borderColor: c.cardBorder },
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.fg }]}>New session</Text>
-            <TextInput
-              placeholder="Session name"
-              placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
-              style={[
-                styles.input,
-                { color: c.fg, borderColor: c.border, backgroundColor: c.bg },
-              ]}
-              value={newName}
-              onChangeText={setNewName}
-            />
-            <TextInput
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
-              style={[
-                styles.input,
-                { color: c.fg, borderColor: c.border, backgroundColor: c.bg },
-              ]}
-              value={newDate}
-              onChangeText={setNewDate}
-            />
-
-            <View style={styles.actionsRow}>
-              <Pressable
-                onPress={() => setCreateOpen(false)}
-                android_ripple={{ color: c.ripple }}
+      <Modal
+        visible={createOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setCreateOpen(false)}
+      >
+        {/* Tap outside to dismiss keyboard */}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={insets.top + 8} // lift just enough under notch/nav
+              style={{ width: "100%" }}
+            >
+              {/* Card */}
+              <View
                 style={[
-                  styles.button,
-                  styles.ghostButton,
-                  { borderColor: c.border },
+                  styles.modalCard,
+                  { backgroundColor: c.cardBg, borderColor: c.cardBorder },
                 ]}
               >
-                <Text style={[styles.ghostText, { color: c.fg }]}>Cancel</Text>
-              </Pressable>
-
-              <Pressable
-                onPress={createSession}
-                android_ripple={{ color: c.ripple }}
-                style={[styles.button, { backgroundColor: c.primary }]}
-              >
-                <Text style={[styles.buttonText, { color: c.onPrimary }]}>
-                  Create
+                <Text style={[styles.cardTitle, { color: c.fg }]}>
+                  New session
                 </Text>
-              </Pressable>
-            </View>
+
+                <TextInput
+                  placeholder="Session name"
+                  placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
+                  style={[
+                    styles.input,
+                    {
+                      color: c.fg,
+                      borderColor: c.border,
+                      backgroundColor: c.bg,
+                    },
+                  ]}
+                  value={newName}
+                  onChangeText={setNewName}
+                  autoCapitalize="sentences"
+                  returnKeyType="next"
+                  inputAccessoryViewID={
+                    Platform.OS === "ios" ? accessoryId : undefined
+                  }
+                />
+
+                <TextInput
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
+                  style={[
+                    styles.input,
+                    {
+                      color: c.fg,
+                      borderColor: c.border,
+                      backgroundColor: c.bg,
+                    },
+                  ]}
+                  value={newDate}
+                  onChangeText={setNewDate}
+                  autoCapitalize="none"
+                  keyboardType={
+                    Platform.OS === "ios"
+                      ? "numbers-and-punctuation"
+                      : "default"
+                  }
+                  returnKeyType="done"
+                  inputAccessoryViewID={
+                    Platform.OS === "ios" ? accessoryId : undefined
+                  }
+                />
+
+                <View style={styles.actionsRow}>
+                  <Pressable
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setCreateOpen(false);
+                    }}
+                    android_ripple={{ color: c.ripple }}
+                    style={[
+                      styles.button,
+                      styles.ghostButton,
+                      { borderColor: c.border },
+                    ]}
+                  >
+                    <Text style={[styles.ghostText, { color: c.fg }]}>
+                      Cancel
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={async () => {
+                      Keyboard.dismiss();
+                      await createSession();
+                    }}
+                    android_ripple={{ color: c.ripple }}
+                    style={[styles.button, { backgroundColor: c.primary }]}
+                  >
+                    <Text style={[styles.buttonText, { color: c.onPrimary }]}>
+                      Create
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {/* iOS "Done" bar above the keyboard */}
+                {Platform.OS === "ios" && (
+                  <InputAccessoryView nativeID={accessoryId}>
+                    <View style={styles.accessoryBar}>
+                      <View style={{ flex: 1 }} />
+                      <Pressable
+                        onPress={Keyboard.dismiss}
+                        style={styles.accessoryBtn}
+                      >
+                        <Text style={styles.accessoryText}>Done</Text>
+                      </Pressable>
+                    </View>
+                  </InputAccessoryView>
+                )}
+              </View>
+            </KeyboardAvoidingView>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
@@ -525,5 +600,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 12,
     fontSize: 16,
+  },
+  accessoryBar: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: "#d1d5db",
+    backgroundColor: "#f8fafc",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  accessoryBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#3b82f6",
+  },
+  accessoryText: {
+    color: "#fff",
+    fontWeight: "700",
   },
 });
