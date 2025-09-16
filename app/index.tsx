@@ -4,16 +4,16 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Keyboard, // 👈 add
+  Keyboard,
   KeyboardAvoidingView,
-  Modal, // 👈 add
+  Modal,
   Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
-  TextInput, // 👈 add (iOS only, safe to import)
-  TouchableWithoutFeedback, // 👈 add
+  TextInput,
+  TouchableWithoutFeedback,
   useColorScheme,
   View,
 } from "react-native";
@@ -60,7 +60,7 @@ export default function Home() {
       const res = await fetch(`${API_BASE}/sessions`, {
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": userId, // simple mode
+          "x-user-id": userId,
         },
       });
       if (!res.ok) throw new Error(await res.text());
@@ -106,7 +106,7 @@ export default function Home() {
       setNewName("");
       setNewDate(today);
       setCreateOpen(false);
-      // jump straight in
+
       router.push({
         pathname: "/(tabs)/session/[id]",
         params: { id: String(created.id) },
