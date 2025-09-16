@@ -1,8 +1,9 @@
 {
-  "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit",
-    "source.organizeImports": "explicit",
-    "source.sortMembers": "explicit"
-  },
-  "appService.zipIgnorePattern": ["node_modules{,/**}", ".vscode{,/**}"]
+  "appService.deploySubpath": "server",
+  "appService.zipIgnorePattern": [
+    "**/.git{,/**}",
+    "**/.vscode{,/**}",
+    "**/node_modules{,/**}"
+  ],
+  "appService.defaultWebAppToDeploy": "/subscriptions/78c23eb9-1f60-46b3-9816-60d09c53d171/resourceGroups/putter_group/providers/Microsoft.Web/sites/putter"
 }
