@@ -9,6 +9,7 @@ const PORT = Number(process.env.PORT) || 4000;
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 
+app.get("/", (_req, res) => res.json({ message: "Hello from Putter API!" }));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/sessions", sessionsRouter);
 
