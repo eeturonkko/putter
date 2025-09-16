@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  InputAccessoryView,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -65,9 +64,9 @@ export default function SessionScreen() {
 
   // Add Distance modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [distance, setDistance] = useState("3");
-  const [attempts, setAttempts] = useState("10");
-  const [makes, setMakes] = useState("7");
+  const [distance, setDistance] = useState("0");
+  const [attempts, setAttempts] = useState("0");
+  const [makes, setMakes] = useState("0");
 
   const totals = useMemo(() => {
     if (!session) return { attempts: 0, makes: 0, pct: 0 };
@@ -499,13 +498,11 @@ export default function SessionScreen() {
                   { backgroundColor: c.cardBg, borderColor: c.cardBorder },
                 ]}
               >
-                <Text style={[styles.cardTitle, { color: c.fg }]}>
-                  Add distance
+                <Text style={[styles.inputLabel, { color: c.muted }]}>
+                  Distance (m)
                 </Text>
-
-                {/* DISTANCE */}
                 <TextInput
-                  placeholder="Distance (m)"
+                  placeholder="e.g. 3"
                   keyboardType="number-pad"
                   placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
                   style={[
@@ -523,9 +520,11 @@ export default function SessionScreen() {
                   }
                 />
 
-                {/* ATTEMPTS */}
+                <Text style={[styles.inputLabel, { color: c.muted }]}>
+                  Attempts
+                </Text>
                 <TextInput
-                  placeholder="Attempts"
+                  placeholder="e.g. 10"
                   keyboardType="number-pad"
                   placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
                   style={[
@@ -543,9 +542,11 @@ export default function SessionScreen() {
                   }
                 />
 
-                {/* MAKES */}
+                <Text style={[styles.inputLabel, { color: c.muted }]}>
+                  Makes
+                </Text>
                 <TextInput
-                  placeholder="Makes"
+                  placeholder="e.g. 7"
                   keyboardType="number-pad"
                   placeholderTextColor={isDark ? "#7b8494" : "#9aa3b2"}
                   style={[
@@ -596,7 +597,7 @@ export default function SessionScreen() {
                 </View>
 
                 {/* iOS "Done" bar */}
-                {Platform.OS === "ios" && (
+                {/*  {Platform.OS === "ios" && (
                   <InputAccessoryView nativeID={accessoryId}>
                     <View style={styles.accessoryBar}>
                       <View style={{ flex: 1 }} />
@@ -608,7 +609,7 @@ export default function SessionScreen() {
                       </Pressable>
                     </View>
                   </InputAccessoryView>
-                )}
+                )} */}
               </Pressable>
             </KeyboardAvoidingView>
           </View>
@@ -791,5 +792,12 @@ const styles = StyleSheet.create({
   accessoryText: {
     color: "#fff",
     fontWeight: "700",
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+    marginTop: 6,
+    marginBottom: 6,
   },
 });

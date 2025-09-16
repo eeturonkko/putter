@@ -3,8 +3,7 @@ import { Link, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList, // 👈 add
-  InputAccessoryView,
+  FlatList,
   Keyboard, // 👈 add
   KeyboardAvoidingView,
   Modal, // 👈 add
@@ -393,7 +392,7 @@ export default function Home() {
                 </View>
 
                 {/* iOS "Done" bar above the keyboard */}
-                {Platform.OS === "ios" && (
+                {/* {Platform.OS === "ios" && (
                   <InputAccessoryView nativeID={accessoryId}>
                     <View style={styles.accessoryBar}>
                       <View style={{ flex: 1 }} />
@@ -405,7 +404,7 @@ export default function Home() {
                       </Pressable>
                     </View>
                   </InputAccessoryView>
-                )}
+                )} */}
               </View>
             </KeyboardAvoidingView>
           </View>
