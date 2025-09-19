@@ -140,7 +140,6 @@ export default function Home() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg }]}>
       <View style={styles.container}>
-        {/* App header */}
         <View style={styles.headerRow}>
           <Text style={[styles.appName, { color: c.fg }]}>Putter</Text>
           <View style={[styles.badge, { backgroundColor: c.badgeBg }]}>
@@ -148,13 +147,11 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Big title */}
         <Text style={[styles.title, { color: c.fg }]}>Welcome</Text>
         <Text style={[styles.subtitle, { color: c.muted }]}>
           Putter helps you track distances and makes to sharpen your putting.
         </Text>
 
-        {/* Card */}
         <View
           style={[
             styles.card,
@@ -169,7 +166,6 @@ export default function Home() {
               Create a new session or open an existing one below.
             </Text>
 
-            {/* Actions */}
             <View style={styles.actionsRow}>
               <Pressable
                 onPress={() => setCreateOpen(true)}
@@ -183,12 +179,10 @@ export default function Home() {
               <SignOutButton />
             </View>
 
-            {/* Error */}
             {error ? (
               <Text style={{ color: "#ef4444", marginTop: 8 }}>{error}</Text>
             ) : null}
 
-            {/* Sessions list */}
             {loading ? (
               <View style={{ paddingVertical: 20 }}>
                 <ActivityIndicator />
@@ -288,22 +282,19 @@ export default function Home() {
         </Text>
       </View>
 
-      {/* Create Session Modal */}
       <Modal
         visible={createOpen}
         transparent
         animationType="slide"
         onRequestClose={() => setCreateOpen(false)}
       >
-        {/* Tap outside to dismiss keyboard */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.modalOverlay}>
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={insets.top + 8} // lift just enough under notch/nav
+              keyboardVerticalOffset={insets.top + 8}
               style={{ width: "100%" }}
             >
-              {/* Card */}
               <View
                 style={[
                   styles.modalCard,

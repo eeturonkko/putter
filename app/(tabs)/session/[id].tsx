@@ -42,7 +42,6 @@ const API_BASE =
   process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "http://192.168.100.10:4000";
 
-// ---- helpers ----
 const onlyInt = (s: string) => s.replace(/[^\d]/g, "") || "0";
 const clamp = (n: number, min: number, max: number) =>
   Math.max(min, Math.min(max, n));
@@ -62,7 +61,6 @@ export default function SessionScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // Add Distance modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [distance, setDistance] = useState("0");
   const [attempts, setAttempts] = useState("0");
@@ -96,7 +94,6 @@ export default function SessionScreen() {
         throw new Error(`${res.status}: ${txt || "Failed to load session"}`);
       }
       const data: Session = await res.json();
-      // ensure sorted
       data.putts = [...(data.putts || [])].sort(sortPutts);
       setSession(data);
     } catch (e: any) {
@@ -117,7 +114,6 @@ export default function SessionScreen() {
     load();
   }, [load]);
 
-  // --- mutations ---
   const addDistance = async () => {
     if (!session) return;
     const d = parseInt(onlyInt(distance), 10);
@@ -240,7 +236,6 @@ export default function SessionScreen() {
     );
   };
 
-  // ---- UI components ----
   const Row = ({ row }: { row: PuttRow }) => {
     const pct = row.attempts ? Math.round((row.makes / row.attempts) * 100) : 0;
 
@@ -249,7 +244,6 @@ export default function SessionScreen() {
       updateRow(row, { attempts: Math.max(row.makes, row.attempts - 1) });
 
     const incMakes = () => {
-      // keep invariant makes <= attempts
       if (row.makes === row.attempts) {
         updateRow(row, { attempts: row.attempts + 1, makes: row.makes + 1 });
       } else {
@@ -358,7 +352,6 @@ export default function SessionScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg }]}>
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.topRow}>
           <Pressable
             onPress={() => router.back()}
@@ -386,7 +379,6 @@ export default function SessionScreen() {
           </Pressable>
         </View>
 
-        {/* Session header card */}
         <View
           style={[
             styles.card,
@@ -398,7 +390,6 @@ export default function SessionScreen() {
             {session.date}
           </Text>
 
-          {/* Totals */}
           <View style={styles.statsRow}>
             <View style={[styles.stat, { backgroundColor: c.badgeBg }]}>
               <Text style={[styles.statLabel, { color: c.muted }]}>
@@ -424,7 +415,6 @@ export default function SessionScreen() {
             </View>
           </View>
 
-          {/* Actions */}
           <View style={styles.actionsRow}>
             <Pressable
               onPress={() => setModalOpen(true)}
@@ -438,12 +428,10 @@ export default function SessionScreen() {
           </View>
         </View>
 
-        {/* Error */}
         {err ? (
           <Text style={{ color: "#ef4444", marginTop: 6 }}>{err}</Text>
         ) : null}
 
-        {/* List */}
         <FlatList
           keyboardShouldPersistTaps="handled"
           data={session.putts}
@@ -477,20 +465,17 @@ export default function SessionScreen() {
         />
       </View>
 
-      {/* Add Distance Modal */}
       <Modal
         visible={modalOpen}
         transparent
         animationType="slide"
         onRequestClose={() => setModalOpen(false)}
       >
-        {/* tap anywhere outside to dismiss keyboard (not closing modal) */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.modalOverlay}>
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
-              {/* stop propagation so taps inside the card don't dismiss */}
               <Pressable
                 onPress={() => {}}
                 style={[
@@ -619,7 +604,6 @@ export default function SessionScreen() {
   );
 }
 
-// --- palette & styles (matching your Home screen vibe) ---
 function palette(dark: boolean) {
   return dark
     ? {
@@ -708,7 +692,6 @@ const styles = StyleSheet.create({
   ghostButton: { backgroundColor: "transparent", borderWidth: 1 },
   ghostText: { fontSize: 16, fontWeight: "700", letterSpacing: 0.2 },
 
-  // rows
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -742,7 +725,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // empty
   empty: {
     borderWidth: 1,
     borderRadius: 12,
@@ -753,7 +735,6 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: "700" },
   emptyText: { fontSize: 13, textAlign: "center" },
 
-  // modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
