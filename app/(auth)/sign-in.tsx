@@ -50,7 +50,6 @@ export default function SignInScreen() {
         console.error(JSON.stringify(attempt, null, 2));
       }
     } catch (e: any) {
-      // Clerk palauttaa errors-taulukon
       const msg =
         e?.errors?.[0]?.longMessage ||
         e?.errors?.[0]?.message ||
@@ -69,18 +68,15 @@ export default function SignInScreen() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.container}>
-            {/* Header */}
             <View style={styles.headerRow}>
               <Text style={[styles.appName, { color: c.fg }]}>YourApp</Text>
             </View>
 
-            {/* Title */}
             <Text style={[styles.title, { color: c.fg }]}>Kirjaudu sisään</Text>
             <Text style={[styles.subtitle, { color: c.muted }]}>
               Syötä sähköpostisi ja salasanasi jatkaaksesi.
             </Text>
 
-            {/* Form card */}
             <View
               style={[
                 styles.card,
@@ -162,8 +158,6 @@ export default function SignInScreen() {
     </SafeAreaView>
   );
 }
-
-/* ---------- Styles & palette ---------- */
 
 function palette(dark: boolean) {
   return dark
